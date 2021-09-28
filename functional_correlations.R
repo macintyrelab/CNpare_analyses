@@ -1,6 +1,6 @@
 ############Script for correlating functional data from CCLE cell lines#########
-## This script contains the code used for comparing cell lines profiles######### 
-## using RNA-seq data and methylation data                             #########
+## This script contains the code used for finding match for the OVKATE ######### 
+## cell line using RNA-seq data and methylation data                   #########
 ################################################################################
 
 ####RNA-seq data#####
