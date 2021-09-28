@@ -6,6 +6,7 @@
 ####RNA-seq data#####
 #Load data
 CCLE_expresion<-read.csv("CCLE_expression.csv",header = TRUE) #Load RNA-seq data from DEPMAP
+#Link for downloading:https://depmap.org/portal/download/
 CCL_names<-read.csv("sample_info (1).csv",header=TRUE) #Load info data with CCLE IDs
 
 #Change Depmap IDs to CCLE IDs
