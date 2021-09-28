@@ -6,6 +6,7 @@
 #Load the datasets with Sanger and Broad
 broad_data<-read.csv("rnaseq_broad_20210317.csv")
 sanger_data<-read.csv("rnaseq_sanger_20210316.csv")
+#Can be downloaded from: 
 model_id<-read.csv("model_list_20210719.csv") #Data with cell line information
 list_broad<-as.data.frame(unique(broad_data$model_id)) #List the cell lines IDs in Broad
 list_sanger<-as.data.frame(unique(sanger_data$model_id))#List the cell lines IDs in Sanger
