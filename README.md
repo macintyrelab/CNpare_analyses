@@ -3,14 +3,12 @@
 ## Summary of the repository 
 This repository includes the code needed to reproduce the analyses performed in the manuscript [CNpare: matching DNA copy number profiles](https://www.biorxiv.org/content/10.1101/2021.09.28.462193v1) 
 
-Prior to run this code, out **CNpare** tool should be installed as follows:
-
+Prior to run this code, our **CNpare** tool should be installed as follows:
 ``` r
 git clone https://github.com/macintyrelab/CNpare.git
 ```
 
 Once installed, CNpare must be loaded
-
 ``` r
 library(CNpare)
 ```
