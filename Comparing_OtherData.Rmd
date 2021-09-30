@@ -294,7 +294,6 @@ colnames(gdsc)<-both
 
 ```{r matched}
 correlations<-getSimilarities(ccle,gdsc,method="pearson")
-colnames(correlations)[3]<-"r" #Needed by getTopHit function (will be updated soon)
 
 list.tophits<-getTopHit(samples=both, measure=correlations, method="pearson")
 list.tophits$equal<-list.tophits[,1]==list.tophits[,2]
