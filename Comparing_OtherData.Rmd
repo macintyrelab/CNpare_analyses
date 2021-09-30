@@ -38,8 +38,8 @@ In order to benchmark CNpare against other approaches for choosing matching cell
 ##### [Input data]{.ul}
 
 ```{r cn_input}
-cells_segcn <- readRDS(paste0(path_to_data, "cellLine_segment_ascat_sc_fixed_purity_tCN.rds"))
-mapping <- read.table(paste0(path_to_data,"cellLine_CEL_file_mapping.tsv"),sep="\t",header = T)
+cells_segcn <- cells_segcn
+mapping <- cells_mapping
 ```
 
 ```{r data_process}
