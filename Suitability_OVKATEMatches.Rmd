@@ -1,0 +1,166 @@
+---
+title: "Validating the best match for the OVKATE cell lines"
+author: 
+  - Barbara Hernando, bhernando@cnio.es
+  - Blas Chaves, bchavesu@ext.cnio.es
+  - Geoff Macintyre, gmacintyre@cnio.es
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    number_sections: no
+    theme: simplex
+    toc: yes
+    toc_float: yes
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment = "#>")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+
+#PACKAGED NEEDED
+library(ggplot2)
+library(CNpare)
+
+# DATA DIRECTORY
+path_to_data<-"C:/Users/bhernando/Desktop/CNIO/Projects/BlasProject/quality_tool/data/"
+```
+
+
+This Rmarkdown illustrated the validation of the suitability of the cell line matched to OVKATE using 
+**CNpare tool** employing gene expression and DNA methylation data.
+
+
+### 1. Using gene expression data
+
+##### [Input data]{.ul}
+
+We first download the input data from: https://depmap.org/portal/download/
+
+    - `CCLE_expression.csv` -- RNAseq TPM expression data for the protein coding genes
+    using RSEM. 
+    - `sample_info.csv` -- File with all the information about the different cell lines in CCLE.
+    
+```{r input_gexp, include=FALSE}
+CCLE_expresion<-read.csv(paste0(path_to_data,"CCLE_expression.csv",header = TRUE))
+CCL_names<-read.csv(paste0(path_to_data,"sample_info.csv",header=TRUE))
+```
+
+##### [Change DepMap IDs to CCLE names]{.ul}
+```{r change_names}
+for (i in 1:nrow(CCLE_expresion)){
+  CCLE_expresion$X[i]<-CCL_names$cell_line_name[which(CCLE_expresion$X[i]==CCL_names$DepMap_ID)]
+}
+```
+
+##### [Prepare data for correlation]{.ul}
+```{r data_processing}
+all<-CCLE_expresion[,-1]
+all<-t(all)
+all<-as.data.frame(all)
+colnames(all)<-CCLE_expresion$X #Name the colums with CCLE cell lines ID
+```
+
+##### [Correlation analyses]{.ul}
+
+We selected those genes which had an absolute log-fold change greater than 1 for OVKATE and used these genes to perform a Pearson correlation with PANC0203, KURAMOCHI and OVISE cell lines.
+
+```{r analysis}
+#select genes
+selected_genes<-c()
+for (i in 1:nrow(all)){
+  if (abs(all$OVKATE[i])>1){
+    selected_genes<-rbind(selected_genes,all[i,])
+  }
+}
+#saveRDS(selected_genes,"genes_logfc_higher1_ovkate.rds") #Save the generated data
+
+#pearson
+cor_all<-c()
+for (j in 1:ncol(selected_genes)){
+  cor <- cor.test(selected_genes$OVKATE,selected_genes[,j], method = "pearson")
+  cor <- rbind(cellLine_1="OVKATE",cellLine_2=colnames(selected_genes)[j],cor=cor$estimate,p.val=cor$p.value)
+  cor_all <- cbind(cor_all, cor)
+}
+cor_all<-as.data.frame(cor_all)
+cor_coef<-as.data.frame(cor_all[3,]) #Obtain all correlations coefficients
+cor_coef<-t(cor_coef)
+cor_coef<-as.data.frame(cor_coef)
+
+#matched cell lines
+ovi<-cor_all[which(cor_all[2,]=="OVISE")]
+kur<-cor_all[which(cor_all[2,]=="KURAMOCHI")]
+ov9<-cor_all[which(cor_all[2,]=="OV-90")]
+panc<-cor_all[which(cor_all[2,]=="Panc 02.03")]
+
+#empirical p-values
+values<-cor_coef[which(cor_coef$cor>0.738),] #cor is the selected correlation coefficient
+empirical_p<-length(values)/nrow(cor_coef)
+```
+
+#### [Density plot of correlation coefficients with gene expression data]{.ul}
+```{r densityplot_gexp, fig1, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+ggplot(data=cor_coef,aes(x=as.numeric(cor)))+
+  geom_density(fill='firebrick4')+
+  xlab("Pearson correlation coefficient of OVKATE vs All cell lines")+
+  ylab("Frequency")+
+  ggtitle("Distribution of the different correlation coeficients (Gene-expression)")+
+  theme_minimal()
+```
+
+
+### 2. Using methylation data
+
+##### [Input met data]{.ul}
+
+We first download the input data from: https://depmap.org/portal/download/
+
+    - `CCLE_RRBS_TSS1kb_20181022.txt` -- DNA methylation data from 1Kb upstream of gene transcription start sites. 
+    
+```{r input_met, include=FALSE}
+CCLE_methylation<-read.table("CCLE_RRBS_TSS1kb_20181022.txt",header=T,sep="\t")
+methylation_data<-CCLE_methylation[,-c(1:3)] #Prepare data for correlation
+```
+
+##### [Perform correlations with methylation data]{.ul}
+
+We performed Pearson correlation for OVKATE vs all cell lines. Methylation profiles for cell lines EKVX, UO31, HOP62, MOLT3, OE21, JHUEM7, ML1, CL34, REC1 and OPM2 were removed due to insufficient data.
+
+```{r met_analysis}
+cor_all<-c()
+for (j in 1:nrow(methylation_data)){
+  if (j==793|j==814|j==822|j==831|j==834|j==835|j==836|j==837|j==838|j==839){}
+  else{
+  cor <- cor.test(as.numeric(methylation_data$OVKATE_OVARY),as.numeric(methylation_data[,j]), method = "pearson")
+  cor <- rbind(cellLine_1="OVKATE",cellLine_2=colnames(methylation_data)[j],cor=cor$estimate) 
+  cor_all <- cbind(cor_all, cor)
+  print(paste0("Comparing n#  ", j))}
+}
+cor_all<-as.data.frame(cor_all)
+cor_coef<-as.data.frame(cor_all[3,])
+colnames(cor_all)<-c(1:833)
+cor_coef<-t(cor_coef)
+cor_coef<-as.data.frame(cor_coef)
+
+#matched cell lines
+ovi_met<-cor_all[which(cor_all[2,]=="OVISE")]
+kur_met<-cor_all[which(cor_all[2,]=="KURAMOCHI")]
+ov9_met<-cor_all[which(cor_all[2,]=="OV-90")]
+panc_met<-cor_all[which(cor_all[2,]=="Panc 02.03")]
+
+#empirical p-values
+values_met<-cor_coef[which(cor_coef$cor>0.738),] #cor is the selected correlation coefficient
+empirical_p_met<-length(values)/nrow(cor_coef)
+```
+
+#### [Density plot of correlation coefficients with methylation data]{.ul}
+```{r densityplot_meth, fig2, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+ggplot(data=cor_coef,aes(x=as.numeric(cor)))+
+  geom_density(fill='firebrick4')+
+  xlab("Pearson correlation coefficient of OVKATE vs All cell lines")+
+  ylab("Frequency")+
+  ggtitle("Distribution of the different correlation coeficients (Methylation data)")+
+  theme_minimal()
+```
