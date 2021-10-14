@@ -109,6 +109,12 @@ ggplot(data=cor_coef,aes(x=as.numeric(cor)))+
   ggtitle("Distribution of the different correlation coeficients (Gene-expression)")+
   theme_minimal()
 ```
+#### [QQ plots]{.ul}
+```{r qqplot_gexp, fig1, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+source("qqplot_geneProfile.R")
+qqplot_geneProfile(val1=selected_genes$OVKATE,
+       val2=selected_genes$`Panc 02.03`,method1="OVKATE profile",method2="PANC0203 profile")
+```
 
 
 ### 2. Using methylation data
@@ -163,4 +169,10 @@ ggplot(data=cor_coef,aes(x=as.numeric(cor)))+
   ylab("Frequency")+
   ggtitle("Distribution of the different correlation coeficients (Methylation data)")+
   theme_minimal()
+```
+#### [QQ plots Met]{.ul}
+```{r qqplot_met, fig1, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+source("qqplot_metProfile.R")
+qqplot_metProfile(val1=as.numeric(methylation_data$OVKATE_OVARY),
+       val2=as.numeric(methylation_data$PANC0203_PANCREAS),method1="OVKATE profile",method2="PANC0203 profile")
 ```
