@@ -1,0 +1,157 @@
+---
+title: "Validating the best match for the OVKATE cell lines"
+author: 
+  - Barbara Hernando, bhernando@cnio.es
+  - Blas Chaves, bchavesu@ext.cnio.es
+  - Geoff Macintyre, gmacintyre@cnio.es
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    number_sections: no
+    theme: simplex
+    toc: yes
+    toc_float: yes
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment = "#>")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+
+#PACKAGES NEEDED
+library(ggplot2)
+library(CNpare)
+library(qusage)
+library(stringr)
+
+# DATA DIRECTORY
+path_to_data<-"C:/Users/bhernando/Desktop/CNIO/Projects/BlasProject/quality_tool/data/"
+```
+
+This Rmarkdown illustrates the validation of the suitability of the cell line matched to OVKATE using 
+**CNpare tool** employing gene expression (TPM) data.
+
+
+##### [Input data]{.ul}
+
+We first download the input data from: https://depmap.org/portal/download/
+
+    - `CCLE_expression.csv` -- RNAseq TPM expression data for the protein coding genes
+    using RSEM. 
+    - `sample_info.csv` -- File with all the information about the different cell lines in CCLE.
+    
+```{r input_gexp, include=FALSE}
+CCLE_expresion<-read.csv(paste0(path_to_data,"CCLE_expression.csv"),header = TRUE)
+CCL_names<-read.csv(paste0(path_to_data,"sample_info.csv"),header=TRUE)
+```
+
+##### [Change DepMap IDs to CCLE names]{.ul}
+```{r change_names}
+for (i in 1:nrow(CCLE_expresion)){
+  CCLE_expresion$X[i]<-CCL_names$cell_line_name[which(CCLE_expresion$X[i]==CCL_names$DepMap_ID)]
+}
+```
+
+##### [Prepare data for correlation]{.ul}
+```{r data_processing}
+all<-CCLE_expresion[,-1]
+all<-t(all)
+all<-as.data.frame(all)
+colnames(all)<-CCLE_expresion$X #Name the columns with CCLE cell lines ID
+```
+
+##### [Change gene IDs to HGNC names]{.ul}
+```{r change_hgnc}
+for(i in 1:nrow(all)){
+  gen<-str_split(rownames(all)[i],"\\.")
+  if(length(gen[[1]])==4){rownames(all)[i]<-gen[[1]][1]}
+  else if(length(gen[[1]])>4){rownames(all)[i]<-paste0(gen[[1]][1],"-",gen[[1]][2])}
+}
+```
+
+##### [Filtering out non-driver genes]{.ul}
+
+We then selected expression data only from driver genes. We used the c6 gene set from the GSEA portal.
+
+```{r gene_filtering}
+c6_genes<-read.gmt(paste0(path_to_data,"c6.all.v7.4.symbols.gmt"))
+selected.genes<-unique(unname(unlist(c6_genes)))
+
+#Expression data with selected genes
+filtered<-all[which(rownames(all)%in%selected.genes),]
+```
+
+##### [Correlation analyses]{.ul}
+
+We first selected the 1500 genes with higher expression in OVKATE (our cell of interest) and used these genes to perform a Pearson correlation with PANC0203, KURAMOCHI and OVISE cell lines (the matched cell lines).
+
+```{r analysis}
+#Order all the genes depending on OVKATE expression values
+filtered<-filtered[order(-filtered$OVKATE),]  
+
+#Select the 1500 genes with highest expression in OVKATE
+selected_genes<-filtered[1:1500,]
+
+#Pearson
+ovkate<-as.data.frame(selected_genes$OVKATE)
+colnames(ovkate)[1]<-"OVKATE"
+cor_all<-getSimilarities(dat1=ovkate, dat2=selected_genes, method="pearson", pvalue=TRUE)
+
+#Results for the matched cell lines
+ovise.corr<-cor_all[which(cor_all$id=="OVISE"),]
+kuramochi.corr<-cor_all[which(cor_all$id=="KURAMOCHI"),]
+panc.corr<-cor_all[which(cor_all$id=="Panc 02.03"),]
+```
+
+#### [Density plot of correlation coefficients with gene expression data]{.ul}
+
+Next, we plotted the distribution of correlation coefficients obtained when comparing gene expression levels from OVKATE and the rest of cell lines
+```{r densityplot_gexp, fig1, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+ggplot(data=cor_all,aes(x=r))+
+  geom_density(fill='firebrick4')+
+  xlab("Pearson correlation coefficient of OVKATE vs All cell lines")+
+  ylab("Frequency")+
+  ggtitle("Distribution of the different correlation coeficients (Gene-expression)")+
+  theme_minimal()
+```
+
+#### [Scatter plots]{.ul}
+
+Finally, we obtained the scatter plot for each of the comparisons made
+```{r scatter, echo=FALSE, eval=FALSE}
+#Function for generating scatter plots
+getScatterPlot<-function(data1,data2,x.label,y.label){
+  data=as.data.frame(cbind(data1,data2))
+  a<-cor.test(data1,data2,method="pearson")
+  r<-round(a$estimate,digits=2)
+  ggplot(data, aes(x=data1, y=data2)) +    
+    geom_point(aes(color="gray0"), show.legend=F, size=2)+
+    geom_smooth(method = lm,color="black",se=F)+
+    theme_classic () +
+    scale_color_manual(values="grey60")+
+    ggtitle("Top 1500 expressed genes in OVKATE cell line")+
+    labs(tittle="",x=paste0(x.label," Log2(TPM+1) values"), y = paste0(y.label, " Log2(TPM+1) values"))+
+    theme(plot.title = element_text(face="bold", colour = "black", size=9))+
+    annotate("text", x=12, y=0, label=paste0("r = ",r), size=4)+
+    theme(axis.title.y = element_text(margin = margin(r=0.2, unit = "cm"),size=12, vjust = -0.5))+
+    theme(axis.title.x = element_text(margin = margin(t=0.2, unit = "cm"),size=12))+
+    theme(axis.text.x = element_text(colour = "black", size = 10))+
+    theme(axis.text.y = element_text(colour = "black", size = 10))+
+    theme(plot.margin = margin(t = 0.2, r = 0.1, b = 0.2, l = 0.1, unit = "cm"))
+}  
+```
+
+##### OVISE
+```{r scatter_plot, fig1, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+getScatterPlot(data1=selected_genes$OVKATE, data2=selected_genes$OVISE, x.label="OVKATE", y.label="OVISE")
+```
+##### KURAMOCHI
+```{r scatter_plot, fig1, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+getScatterPlot(data1=selected_genes$OVKATE, data2=selected_genes$KURAMOCHI, x.label="OVKATE", y.label="KURAMOCHI")
+```
+##### Panc 02.03
+```{r scatter_plot, fig1, fig.height = 4, fig.width = 8, fig.align = "center", eval=TRUE, echo=FALSE}
+getScatterPlot(data1=selected_genes$OVKATE, data2=selected_genes$`Panc 02.03`, x.label="OVKATE", y.label="Panc 02.03")
+```
