@@ -25,7 +25,7 @@ library(CNpare)
 
 ### Assessing performance of CNparison
 
-This Rmarkdown is used to check the ability of **CNpare Tool** to identify the copy-number profile with the highest similarity to a sample of interest. For this purpose, we used separate cultures of the same cell lines profiled as part of the CCLE and GDSC projects (304 pairs) and observed the capacity of CNparison to identify the correct cell line.
+This Rmarkdown is used to check the ability of **CNpare Tool** to identify the copy-number profile with the highest similarity to a sample of interest. For this purpose, we used separate cultures of the same cell lines profiled as part of the CCLE and GDSC projects (304 pairs) and observed the capacity of CNpare to identify the correct cell line.
 
 #### Step 1: set up to run the quality tool
 
