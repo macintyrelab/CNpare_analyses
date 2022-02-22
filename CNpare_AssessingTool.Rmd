@@ -46,10 +46,11 @@ cells_mapping<-cells_mapping
 Segmented copy-number profiles of cell lines may be fitted to the genomic positions of bins. Therefore, we split genome in evenly sized bins (default 500 kb) and get their positions.
 
 ```{r pos_bins}
+bin.size=500
 allchr=c(1:22) #Add 23 if you want to include chrX
 lengthChr=lengthChr
 posBins <- lapply(allchr,function(chr) 
-    getBinsStartsEnds(window=500000, chr, lengthChr[chr]))
+    getBinsStartsEnds(window=bin.size*1000, chr, lengthChr[chr]))
 ```
 
 ##### [Selection of cell lines with CIN]{.ul}
