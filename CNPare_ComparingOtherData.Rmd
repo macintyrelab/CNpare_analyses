@@ -184,9 +184,6 @@ Gene positions were downloaded from UCSC Table Browser. We extracted the copy nu
 
 First, we get gene positions
 ```{r}
-#get COSMIC genes
-cosmic_genes = read.table(paste0(path_to_data,"COSMICgenes.txt"), fill = TRUE, sep="\t")[,1]
-
 #gene positions
 genes = read.table(paste0(path_to_data,"knownGenes_positions.txt"),sep="\t")[,c(1:4,7)]
 genes = genes[genes$V7 %in% cosmic_genes,] #only oncogenic genes
