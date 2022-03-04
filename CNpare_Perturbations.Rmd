@@ -139,7 +139,7 @@ allPerturbed.bins<-lapply(1:10, function(x){
   })
   allPerturbed.bins[[x]]<-perturbed.bincn
 })
-saveRDS(allPerturbed.bins, paste0(path_to_data, "/ccle_bins500kb_perturbated_allruns.rds"))
+#saveRDS(allPerturbed.bins, paste0(path_to_data, "/ccle_bins500kb_perturbated_allruns.rds"))
 ```
 
 ##### 2.2. Compute similarities between CCLE perturbed and GDSC profiles
@@ -193,7 +193,7 @@ testPerturbations <- lapply(1:10, function(x){
 
   testPerturbations[[x]]<-mat.perturbations
 })
-saveRDS(testPerturbations, paste0(path_to_data, "/ccle_bins500kb_perturbated_allruns_manhattan.rds"))
+#saveRDS(testPerturbations, paste0(path_to_data, "/ccle_bins500kb_perturbated_allruns_manhattan.rds"))
 ```
 
 ##### 2.3. Plotting results
