@@ -27,7 +27,7 @@ library(qusage)
 library(stringr)
 
 # DATA DIRECTORY
-path_to_data<-"C:/Users/bhernando/Desktop/CNIO/Projects/BlasProject/quality_tool/data/"
+path_to_data<-paste0(dirname(rstudioapi::getSourceEditorContext()$path),"/data/")
 ```
 
 This Rmarkdown illustrates the validation of the suitability of the cell line matched to OVKATE using 
