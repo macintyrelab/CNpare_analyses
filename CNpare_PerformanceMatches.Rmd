@@ -1,0 +1,118 @@
+---
+title: "Performance assessment of matches"
+author:
+  - Barbara Hernando, bhernando@cnio.es
+  - Blas Chaves, bchavesu@cnio.es
+  - Geoff Macintyre, gmacintyre@cnio.es
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{DemonstratingUtility}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment = "#>")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+
+## PACKAGES
+library(dplyr)
+library(CNpare)
+
+# DATA DIRECTORY
+path_to_data<-paste0(dirname(rstudioapi::getSourceEditorContext()$path),"/data/")
+```
+
+In this script, we tested how optimal the matches found by the tool were. 
+To this, we applied CNpare to identify the next best match for each of the 604 CCLE cell lines, and then quantified the frequency of significant matches (empirical p-value < 0.05). 
+We performed this analysis using both a non-normalized (Manhattan distance) and a normalized (Pearson’s r) similarity measure.
+
+#### 1) Input data
+
+We first get the **RData** files in the `data/` folder:
+
+-   `cells_segcn.RData` -- Absolute copy-number profiles of cancer cell lines generated with *ASCAT*. The segment tables should have the following column headers: "chromosome", "start", "end", "segVal", "sample".
+
+```{r input, include=FALSE}
+cells_segcn<-CNpare::cells_segcn
+```
+
+#### 2) Get bin tables for CCLE cell lines
+
+Segmented copy-number profiles of cell lines may be fitted to the genomic positions of bins. Therefore, we split genome in evenly sized bins (default 500 kb) and get their positions. 
+```{r pos_bins}
+allchr=c(1:22) #Add 23 if want to include chrX
+lengthChr<-lengthChr
+posBins <- lapply(allchr,function(chr) 
+    getBinsStartsEnds(window=500000, chr, lengthChr[chr]))
+```
+
+We selected the CCLE models with available copy-number profile. We also selected profiles with detectable CIN (those with at least 20 CNAs in a profile). Therefore, we discarded profiles with non detectable chromosomal instability. Finally, a matrix with copy-numbers per bin is then generated.
+
+```{r cnbins}
+ccle<-as.data.frame(cbind(cellid=cells_mapping$cellid[cells_mapping$study=="CCLE"],sample=cells_mapping$fileid[cells_mapping$study=="CCLE"]))
+cells_segcn <- cells_segcn[cells_segcn$sample%in%ccle$sample,]
+cells_segcn <- getCINProfiles(segcn=cells_segcn, samples=unique(cells_segcn$sample))
+cells_segcn <- left_join(cells_segcn,ccle, by="sample")[,c(1:4,6)]
+colnames(cells_segcn)[5]<-"sample"
+
+#get copy-number data per bin
+ccle_cn <- getCNbins(posBins=posBins, data=cells_segcn, samples=unique(cells_segcn$sample))
+```
+
+#### 3) Performance assessment of mathces
+
+##### 3.1. Pearson's matches
+```{r}
+#Get similarities
+ccle.measures<-getSimilarities(dat1=ccle_cn, dat2=ccle_cn, method="pearson", pvalue=TRUE)
+
+#Generate a list for the comparison for each case
+pearson.list<-list()
+for (i in unique(ccle.measures$fileid)){
+  element.list<-ccle.measures[which(ccle.measures$fileid==i),]
+  pearson.list[[i]]<-as.data.frame(element.list)
+  pearson.list[[i]]<-pearson.list[[i]][order(pearson.list[[i]]$r,decreasing = TRUE),] #Order from higher to lower Pearson'r value
+  pearson.list[[i]]$sig.pval<-pearson.list[[i]]$r.pval<0.05 #TRUE significative and FALSE non-significative
+}
+
+#Determine which of the next best cell line match is significative e.pval<0.05
+best.match<-c()
+for(i in 1:length(pearson.list)){
+  best.match.row<-pearson.list[[i]][2,]
+  best.match<-rbind(best.match,best.match.row)
+}
+
+#Determine the percentage of significant next best cell line match
+percentage.significant<-(nrow(best.match[best.match$sig.pval==TRUE,])/nrow(best.match))*100
+print(paste0("% of significant matches: ",round(percentage.significant,2)," (",nrow(best.match[best.match$sig.pval==TRUE,])," cells)"))
+```
+
+##### 3.1. Manhattan's matches
+```{r}
+#Get similarities
+ccle.measures<-getSimilarities(dat1=ccle_cn, dat2=ccle_cn, method="manhattan", pvalue=TRUE)
+
+#Generate a list for the comparison for each case
+manhattan.list<-list()
+for (i in unique(ccle.measures$fileid)){
+  element.list<-ccle.measures[which(ccle.measures$fileid==i),]
+  manhattan.list[[i]]<-as.data.frame(element.list)
+  manhattan.list[[i]]<-manhattan.list[[i]][order(manhattan.list[[i]]$manhattan,decreasing=FALSE),] #Order from lower to higher manhattan distance
+  manhattan.list[[i]]$sig.pval<-manhattan.list[[i]]$m.pval<0.05 #TRUE significative and FALSE non-significative
+}
+
+#Determine which of the next best cell line match is significative e.pval<0.05
+best.match<-c()
+for(i in 1:length(manhattan.list)){
+  best.match.row<-manhattan.list[[i]][2,]
+  best.match<-rbind(best.match,best.match.row)
+}
+
+#Determine the percentage of significant next best cell line match
+percentage.significant<-(nrow(best.match[best.match$sig.pval==TRUE,])/nrow(best.match))*100
+print(paste0("% of significant matches: ",round(percentage.significant,2)," (",nrow(best.match[best.match$sig.pval==TRUE,])," cells)"))
+```
