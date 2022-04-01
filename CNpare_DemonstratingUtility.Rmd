@@ -2,7 +2,7 @@
 title: "Indentifying the most representative CIN model"
 author:
   - Barbara Hernando, bhernando@cnio.es
-  - Blas Chaves, bchavesu@ext.cnio.es
+  - Blas Chaves, bchavesu@cnio.es
   - Geoff Macintyre, gmacintyre@cnio.es
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: rmarkdown::html_vignette
