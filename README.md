@@ -22,4 +22,4 @@ The source code for reproducing all analysess is split across four files:
 -   `Suitability_OVKATEMatches.Rmd` -- This Rmarkdown includes the validation analysis of the suitability of the cell lines matched with OVKATE. To this, we assessed correlation of gene expression between the cell lines matched.
 -   `CNpare_Perturbations.Rmd` -- This Rmarkdown includes the simulations performed to test the impact of noise on the ability of CNpare to identify the matched cell lines.
 
-Data needed for reproducing the analysis is included in this repository, or included in the CNpare package, or can be downloaded from public databases (links included in the Rmarkdowns)
+Data needed for reproducing the analysis is included in this repository, or included in the CNpare package, or can be downloaded from public databases (links included in the Rmarkdowns). Data downloaded must be saved in the `/data` folder
