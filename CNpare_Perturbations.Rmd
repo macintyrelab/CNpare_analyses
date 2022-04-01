@@ -25,8 +25,7 @@ library(ggplot2)
 library(ggthemes)
 
 ## DATA DIRECTORY
-path_to_data<-"C:/Users/bhernando/Desktop/CNIO/Projects/BlasProject/quality_tool/data/"
-
+path_to_data<-paste0(dirname(rstudioapi::getSourceEditorContext()$path),"/data/")
 ```
 
 ### Testing the level of artificial perturbations needed to fail
