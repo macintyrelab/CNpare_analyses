@@ -23,7 +23,7 @@ library(dplyr)
 library(CNpare)
 
 # DATA DIRECTORY
-path_to_data<-"C:/Users/bhernando/Desktop/CNIO/Projects/BlasProject/quality_tool/data/"
+path_to_data<-paste0(dirname(rstudioapi::getSourceEditorContext()$path),"/data/")
 ```
 
 ### Finding the best model of chromosomal instability
@@ -141,7 +141,8 @@ tissue.profiles<-getProfiles(segcn=tissue_segcn, samples=unique(tissue_segcn$sam
 
 ##### [Quantification of copy-number signatures]{.ul}
 
-Now, we generate a matrix with the activity levels of each copy-number signature per sample. 
+Now, we generate a matrix with the activity levels of each copy-number signature per sample.
+The file `component_parameters.rds` needs to be downloaded from here: https://bitbucket.org/britroc/cnsignatures/src/master/data/
 ```{r quantify_signs, message=FALSE}
 component_parameters<-readRDS(paste0(path_to_data,"component_parameters.rds"))
 
