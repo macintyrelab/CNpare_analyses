@@ -21,5 +21,6 @@ The source code for reproducing all analysess is split across four files:
 -   `CNpare_DemonstratingUtility.Rmd` -- This Rmarkdown is an example of the CNpare workflow. We use the high-grade serous ovarian cancer cell line OVKATE to find the next most representative cell line model in the CNpare database. Matching is perfomed by similarity in both copy-number profiles and exposure to copy number signatures
 -   `Suitability_OVKATEMatches.Rmd` -- This Rmarkdown includes the validation analysis of the suitability of the cell lines matched with OVKATE. To this, we assessed correlation of gene expression between the cell lines matched.
 -   `CNpare_Perturbations.Rmd` -- This Rmarkdown includes the simulations performed to test the impact of noise on the ability of CNpare to identify the matched cell lines.
+-   `CNpare_PerformanceMatches.Rmd` -- This Rmarkdown analyses how optimal the nest best matches found by the tool are.  
 
 Data needed for reproducing the analysis is included in this repository, or included in the CNpare package, or can be downloaded from public databases (links included in the Rmarkdowns). Data downloaded must be saved in the `/data` folder
